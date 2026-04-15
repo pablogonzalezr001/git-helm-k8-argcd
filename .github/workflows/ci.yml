@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - qa
+      - staging
   pull_request:
     branches:
       - main
@@ -31,7 +33,7 @@ jobs:
         run: |
           cd app/ai-service
           chmod +x gradlew
-          ./gradlew build -x test
+          ./gradlew build
 
       - name: Prepare Image Tag
         id: prep
@@ -49,17 +51,28 @@ jobs:
           docker build -t $DOCKER_IMAGE:${{ env.TAG }} -f docker/Dockerfile .
           docker push $DOCKER_IMAGE:${{ env.TAG }}
 
-      - name: Update Manifests in Repository
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      - name: Determine Environment
+        id: env_vars
         run: |
-          cd k8s/overlays/staging
+          if [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+            echo "DEPLOY_ENV=staging" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/qa" ]]; then
+            echo "DEPLOY_ENV=qa" >> $GITHUB_ENV
+          else
+            echo "DEPLOY_ENV=dev" >> $GITHUB_ENV
+          fi
+
+      - name: Update Manifests in Repository
+        if: github.event_name == 'push'
+        run: |
+          cd k8s/overlays/${{ env.DEPLOY_ENV }}
           
           # Actualiza el tag de la imagen ejecutando el CLI de Kustomize
-          kustomize edit set image mydockerregistry/ai-service=$DOCKER_IMAGE:${{ env.TAG }}
+          kustomize edit set image $DOCKER_IMAGE=$DOCKER_IMAGE:${{ env.TAG }}
           
           # Realiza el commit y empuja de vuelta al repositorio
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add kustomization.yaml
-          git commit -m "Update image tag to ${{ env.TAG }} [skip ci]"
+          git commit -m "Update ${{ env.DEPLOY_ENV }} image tag to ${{ env.TAG }} [skip ci]"
           git push

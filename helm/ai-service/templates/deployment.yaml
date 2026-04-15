@@ -11,9 +11,14 @@ spec:
       {{- include "ai-service.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "ai-service.selectorLabels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "ai-service.serviceAccountName" . }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"

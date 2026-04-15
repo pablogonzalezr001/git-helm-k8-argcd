@@ -8,10 +8,7 @@ set -e
 show_help() {
     echo "Uso: ./manage-terraform.sh <ambiente> <accion>"
     echo ""
-    echo "Ambientes permitidos:"
-    echo "  staging"
-    echo "  prod"
-    echo ""
+    echo "Ambientes: Cualquier carpeta existente en terraform/environments/"
     echo "Acciones permitidas:"
     echo "  init"
     echo "  plan"
@@ -29,9 +26,10 @@ fi
 ENV=$1
 ACTION=$2
 
-if [[ "$ENV" != "staging" && "$ENV" != "prod" ]]; then
-    echo "❌ Error: El ambiente '$ENV' no es válido."
-    show_help
+TARGET_DIR="terraform/environments/$ENV"
+
+if [ ! -d "$TARGET_DIR" ]; then
+    echo "❌ Error: La infraestructura base para '$ENV' no existe en $TARGET_DIR."
     exit 1
 fi
 
@@ -41,8 +39,6 @@ if [[ "$ACTION" != "init" && "$ACTION" != "plan" && "$ACTION" != "apply" && "$AC
     exit 1
 fi
 
-TARGET_DIR="terraform/environments/$ENV"
-
 echo "=========================================================="
 echo "🚀 Acción Automática: terraform $ACTION"
 echo "📍 Ambiente Objetivo: $ENV"
@@ -51,7 +47,18 @@ echo "=========================================================="
 
 cd "$TARGET_DIR"
 
-terraform $ACTION
+if [[ "$ACTION" == "plan" ]]; then
+    terraform plan -out=tfplan
+elif [[ "$ACTION" == "apply" ]]; then
+    if [ -f "tfplan" ]; then
+        terraform apply "tfplan"
+        rm tfplan
+    else
+        terraform apply
+    fi
+else
+    terraform $ACTION
+fi
 
 echo "=========================================================="
 echo "✅ Proceso '$ACTION' en '$ENV' completado."

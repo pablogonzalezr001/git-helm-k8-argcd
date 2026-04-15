@@ -26,8 +26,8 @@ cd ../..
 echo "==============================================="
 echo " FASE 2: EMPAQUETADO (Docker)"
 echo "==============================================="
-AWS_ACCOUNT_ID="123456789012"
-AWS_REGION="us-east-1"
+AWS_ACCOUNT_ID="168841985866"
+AWS_REGION="us-east-2"
 IMAGE_REPO="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ai-service"
 TAG=$(git rev-parse --short HEAD)
 
@@ -90,5 +90,34 @@ kubectl apply -f argocd/app-staging.yaml
 # 3. Y para validar, forzamos manualmente a ArgoCD a que lea los cambios de Github 
 # (aunque ArgoCD lo hace solo cada 3 minutos)
 # argocd app sync ai-service-staging
+
+echo "==============================================="
+echo " ALTERNATIVA LOCAL: FLUJO COMPLETO EN MINIKUBE"
+echo "==============================================="
+# 💡 NUEVO MÉTODO SECUENCIAL AUTOMATIZADO:
+# Con un solo comando levantas el cluster, compilas, instalas ArgoCD y despliegas:
+# make minikube-full-flow
+
+# 1. Iniciar Minikube
+# minikube start
+
+# 2. Construir la imagen localmente (sin push a ECR)
+# docker build -t ai-service:local -f docker/Dockerfile .
+
+# 3. Cargar la imagen directamente al clúster de Minikube (¡Evita Docker Hub/ECR!)
+# minikube image load ai-service:local
+
+# 4. Instalar ArgoCD en Minikube
+# kubectl create namespace argocd
+# kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# 5. Obtener la contraseña de ArgoCD (Usuario: admin)
+# kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
+
+# 6. Port-forward para acceder a la UI de ArgoCD local (https://localhost:8081)
+# kubectl port-forward svc/argocd-server -n argocd 8081:443
+
+# 7. Aplicar la app localmente en ArgoCD (usando Kustomize + Helm)
+# kubectl apply -f argocd/app-local.yaml
 
 echo "¡Comandos de referencia generados!"

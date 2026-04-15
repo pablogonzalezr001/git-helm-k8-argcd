@@ -1,15 +1,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: ai-staging
+namespace: ai-qa
 
 helmCharts:
 - name: ai-service
   includeCRDs: false
   repo: file://../../../helm/ai-service
   releaseName: ai-service
-  namespace: ai-staging
+  namespace: ai-qa
   valuesInline:
-    replicaCount: 2
     image:
-      tag: staging-latest
+      tag: latest
       pullPolicy: Always

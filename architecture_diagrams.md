@@ -64,30 +64,41 @@ flowchart TD
         end
 
         subgraph CarpetaKustomize [Carpeta /k8s]
-            KB["base/kustomization.yaml<br>(Usa helmCharts)"]
-            
-            KB -.->|"Renderiza el Chart Local"| CarpetaHelm
-            
+            KOLocal["overlays/local/"]
+            KODev["overlays/dev/"]
+            KOQa["overlays/qa/"]
             KOStag["overlays/staging/"]
             KOProd["overlays/prod/"]
             
-            KB --> KOStag
-            KB --> KOProd
+            KOLocal -.->|"Renderiza el Chart Local"| CarpetaHelm
+            KODev -.->|"Renderiza el Chart Local"| CarpetaHelm
+            KOQa -.->|"Renderiza el Chart Local"| CarpetaHelm
+            KOStag -.->|"Renderiza el Chart Local"| CarpetaHelm
+            KOProd -.->|"Renderiza el Chart Local"| CarpetaHelm
         end
         
-        Note2>✅ Cero duplicación de código YAML<br>Kustomize inyecta parches sobre el Chart original] -.- CarpetaKustomize
+        Note2>✅ Cero duplicación de código YAML y sin carpeta 'base'.<br>Kustomize inyecta parches directo sobre el Chart original] -.- CarpetaKustomize
     end
 
     subgraph ArgoCD [ArgoCD Controller]
+        AppLocal["App: ai-service-local (Minikube)"]
+        AppDev["App: ai-service-dev"]
+        AppQa["App: ai-service-qa"]
         AppStag["App: ai-service-staging"]
         AppProd["App: ai-service-prod"]
     end
 
+    KOLocal --> AppLocal
+    KODev --> AppDev
+    KOQa --> AppQa
     KOStag --> AppStag
     KOProd --> AppProd
     
+    AppDev --> Cluster[(Cluster K8s)]
+    AppQa --> Cluster
     AppStag --> Cluster[(Cluster K8s)]
     AppProd --> Cluster
+    AppLocal --> Minikube[(Minikube Local)]
 ```
 
 ### Ventajas del Estado Futuro

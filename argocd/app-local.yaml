@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ai-service-local
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # ¡IMPORTANTE! Cambia esto por la URL de tu repositorio de GitHub
+    repoURL: 'https://github.com/pablogonzalezr001/git-helm-k8-argcd.git'
+    targetRevision: HEAD
+    path: k8s/overlays/local
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: ai-local
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
