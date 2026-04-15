@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ai-qa
+
+helmCharts:
+- name: ai-service
+  includeCRDs: false
+  repo: file://../../../helm/ai-service
+  releaseName: ai-service
+  namespace: ai-qa
+  valuesInline:
+    image:
+      repository: pablogonzalezr001/ai-service
+      tag: latest
+      pullPolicy: Always

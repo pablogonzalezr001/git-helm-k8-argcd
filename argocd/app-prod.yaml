@@ -13,7 +13,7 @@ spec:
     targetRevision: HEAD
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: prod
+    namespace: ai-prod
   syncPolicy:
     automated:
       prune: true
