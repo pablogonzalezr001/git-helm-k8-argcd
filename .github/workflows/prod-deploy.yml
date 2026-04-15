@@ -1,0 +1,65 @@
+name: Production Deployment
+
+on:
+  push:
+    tags:
+      - 'v*' # Se ejecuta automáticamente cuando creas un tag como v1.0.0
+  workflow_dispatch: # Te permite ejecutarlo manualmente desde la interfaz de GitHub
+
+env:
+  DOCKER_IMAGE: pablogonzalezr001/ai-service
+  DEPLOY_ENV: prod
+
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Necesario para hacer git push
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build with Gradle
+        run: |
+          cd app/ai-service
+          chmod +x gradlew
+          ./gradlew build
+
+      - name: Prepare Image Tag
+        id: prep
+        run: |
+          # Usa el nombre del tag de GitHub (ej. v1.0.0) o el hash si fue manual
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          else
+            echo "TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          fi
+
+      - name: Log in to Docker Registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t $DOCKER_IMAGE:${{ env.TAG }} -f docker/Dockerfile .
+          docker push $DOCKER_IMAGE:${{ env.TAG }}
+
+      - name: Update Manifests in Repository
+        run: |
+          cd k8s/overlays/${{ env.DEPLOY_ENV }}
+          kustomize edit set image $DOCKER_IMAGE=$DOCKER_IMAGE:${{ env.TAG }}
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add kustomization.yaml
+          git commit -m "🚀 Deploy to PROD: Update image tag to ${{ env.TAG }} [skip ci]"
+          git push

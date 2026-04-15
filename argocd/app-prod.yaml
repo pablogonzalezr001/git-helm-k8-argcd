@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/myorg/git-helm-k8-argcd.git' # Replace with actual repo URL
+    repoURL: 'https://github.com/pablogonzalezr001/git-helm-k8-argcd.git'
     path: k8s/overlays/prod
     targetRevision: HEAD
   destination:
