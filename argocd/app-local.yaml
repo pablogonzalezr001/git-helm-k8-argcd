@@ -9,7 +9,7 @@ spec:
     # ¡IMPORTANTE! Cambia esto por la URL de tu repositorio de GitHub
     repoURL: 'https://github.com/pablogonzalezr001/git-helm-k8-argcd.git'
     targetRevision: HEAD
-    path: helm/ai-service
+    path: k8s/overlays/local
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: ai-local

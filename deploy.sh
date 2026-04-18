@@ -43,7 +43,7 @@ helmCharts:
   namespace: ai-$ENV
   valuesInline:
     image:
-      repository: pablogonzalezr001/ai-service
+      repository: 168841985866.dkr.ecr.us-east-2.amazonaws.com/ai-service
       tag: latest
       pullPolicy: Always
 EOF

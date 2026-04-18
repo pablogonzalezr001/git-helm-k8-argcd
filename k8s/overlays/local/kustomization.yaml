@@ -11,6 +11,6 @@ helmCharts:
   namespace: ai-local
   valuesInline:
     image:
-      repository: pablogonzalezr001/ai-service
-      tag: latest
-      pullPolicy: Always
+      repository: ai-service
+      tag: local
+      pullPolicy: IfNotPresent
